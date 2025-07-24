@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; // ✅ import auth hook
-import { useCart } from "../contexts/CartContext"; // 👈 Add this
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
+import { logOut } from "../services/authService";
 
 import Logo from "../assets/logo.png";
 import Cart from "../assets/cart2.png";
@@ -13,7 +14,12 @@ export default function Navbar() {
   const profileRef = useRef();
   const { cartItems } = useCart();
   const cartCount = cartItems.length;
-  const { user, setUser, loggedIn } = useAuth(); // add setUser
+  const { user, userDoc, loggedIn } = useAuth();
+
+  const handleLogout = async () => {
+    await logOut();
+    setIsProfileOpen(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -86,7 +92,7 @@ export default function Navbar() {
                   className="flex items-center space-x-2 focus:outline-none"
                 >
                   <img
-                    src={user?.profilePhoto || "https://placehold.co/32x32"}
+                    src={user?.photoURL || userDoc?.photoURL || "https://placehold.co/32x32"}
                     alt="User"
                     className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
                   />
@@ -102,10 +108,7 @@ export default function Navbar() {
                       Profile
                     </NavLink>
                     <button
-                      onClick={() => {
-                        setUser(false); // clears the user (logs out)
-                        setIsProfileOpen(false); // closes dropdown
-                      }}
+                      onClick={handleLogout}
                       className="w-full text-left px-4 py-2 hover:bg-gray-800 transition"
                     >
                       Logout
@@ -187,21 +190,18 @@ export default function Navbar() {
             <>
               <button
                 className="block bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md font-medium"
-                onClick={() => {
-                  setUser(false); // clears the user (logs out)
-                  setIsProfileOpen(false); // closes dropdown
-                }}
+                onClick={handleLogout}
               >
                 Logout
               </button>
               <NavLink to="/profile">
                 <div className="flex items-center space-x-2">
                   <img
-                    src={user?.profilePhoto || "https://placehold.co/32x32"}
+                    src={user?.photoURL || userDoc?.photoURL || "https://placehold.co/32x32"}
                     alt="User"
                     className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
                   />
-                  <span>{user.userName}</span>
+                  <span>{user?.displayName || userDoc?.displayName}</span>
                 </div>
               </NavLink>
             </>

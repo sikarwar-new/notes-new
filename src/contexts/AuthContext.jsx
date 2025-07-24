@@ -1,44 +1,46 @@
-// src/db/AuthContext.jsx
+// src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { onAuthStateChange, getUserDocument } from "../services/authService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userDoc, setUserDoc] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("authUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        // Get user document from Firestore
+        const userDocument = await getUserDocument(firebaseUser.uid);
+        setUserDoc(userDocument);
+      } else {
+        setUser(null);
+        setUserDoc(null);
+      }
       setLoading(false);
-    } else {
-      const fakeUser = {
-        userName: "Vinay",
-        profilePhoto: "https://placehold.co/100x100",
-        resourcesAccessed: [
-          "Engineering Mathematics-I",
-          "Basic Electrical Engineering",
-        ],
-        uploadApprove: "no",
-        academicDetails: null, // include this
-      };
-      setUser(fakeUser);
-      localStorage.setItem("authUser", JSON.stringify(fakeUser));
-      setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("authUser", JSON.stringify(user));
-    }
-  }, [user]);
+  const loggedIn = !!user;
 
-  const loggedIn = user;
+  const updateUserDoc = (newData) => {
+    setUserDoc(prev => ({ ...prev, ...newData }));
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loggedIn, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      userDoc, 
+      setUser, 
+      updateUserDoc,
+      loggedIn, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

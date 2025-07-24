@@ -1,26 +1,27 @@
 import React from "react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 
-import Navbar from "../../Components/Navbar.jsx";
 import Hero from "./Hero";
 import ChooseUs from "./ChooseUs";
 import Rest from "./Rest";
-import Footer from "../../Components/Footer.jsx";
 import FAQList from "./FAQList";
 import HomePostLogIn from "../misc/HomePostLogIn";
 
 function Home() {
-  const { user, loggedIn, loading } = useAuth();
+  const { loggedIn, loading } = useAuth();
 
   if (loading) {
-    return <p className="text-center py-10">Loading...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
 
   return (
     <>
-      <Navbar />
       {loggedIn ? (
-        <HomePostLogIn user={user} />
+        <HomePostLogIn />
       ) : (
         <>
           <Hero />
@@ -29,7 +30,6 @@ function Home() {
           <FAQList />
         </>
       )}
-      <Footer />
     </>
   );
 }

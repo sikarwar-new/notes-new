@@ -1,38 +1,46 @@
 import React from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import ProductCard from "../../Components/ProductCard";
-import data from "../../db/data";
+import { getNotesByFilter } from "../../services/notesService";
 
 function Result() {
   const query = new URLSearchParams(useLocation().search);
   const year = query.get("year") || "";
   const branch = query.get("branch") || "";
   const semester = query.get("semester") || "";
+  
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredResults = React.useMemo(() => {
-    const lowerYear = year.toLowerCase();
-    const semesterNumber = semester.match(/\d+/)?.[0];
+  useEffect(() => {
+    const fetchNotes = async () => {
+      setLoading(true);
+      const filters = {};
+      
+      if (year) filters.year = year;
+      if (branch) filters.branch = branch;
+      if (semester) filters.semester = semester;
+      
+      const { notes: fetchedNotes } = await getNotesByFilter(filters);
+      setNotes(fetchedNotes);
+      setLoading(false);
+    };
 
-    return data.filter((item) => {
-      const itemBranch = item.branch?.toLowerCase() || "";
-      const itemYear = item.year?.toLowerCase() || "";
-
-      // If 1st year selected, show all 1st year resources, no branch/semester needed
-      if (lowerYear === "1st") {
-        return itemYear.includes("1"); // You can customize this condition
-      }
-
-      // Otherwise, match by branch and semester
-      return (
-        itemBranch === branch.toLowerCase() &&
-        (semesterNumber ? itemYear.includes(semesterNumber) : false)
-      );
-    });
+    fetchNotes();
   }, [year, branch, semester]);
 
   const handleAddToCart = (course) => {
     console.log("Add to cart clicked for:", course.title);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-10 bg-gray-100">
@@ -47,14 +55,14 @@ function Result() {
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {filteredResults.length > 0 ? (
-          filteredResults.map((course, index) => (
+        {notes.length > 0 ? (
+          notes.map((course, index) => (
             <ProductCard
-              key={index}
+              key={course.id}
               title={course.title}
               subject={course.subject || "General"}
-              numRatings={course.reviews}
-              price={course.newPrice}
+              numRatings={course.ratings?.length || 0}
+              price={course.price}
               btn={"Add to Cart"}
               onAddToCart={() => handleAddToCart(course)}
             />

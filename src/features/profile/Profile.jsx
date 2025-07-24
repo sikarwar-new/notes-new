@@ -1,19 +1,33 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
-import data from "../../db/data.jsx";
 import ProductCard from "../../Components/ProductCard.jsx";
 import UserProfileEdit from "./UserProfileEdit.jsx";
+import { getUserAccessedNotes } from "../../services/notesService.js";
 
 function Profile() {
-  const { user } = useAuth();
+  const { user, userDoc } = useAuth();
   const fileInputRef = useRef(null);
   const [profilePhoto, setProfilePhoto] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [accessedNotes, setAccessedNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && user.profilePhoto) {
-      setProfilePhoto(user.profilePhoto);
+    if (user?.photoURL || userDoc?.photoURL) {
+      setProfilePhoto(user?.photoURL || userDoc?.photoURL);
     }
+  }, [user, userDoc]);
+
+  useEffect(() => {
+    const fetchAccessedNotes = async () => {
+      if (user) {
+        const { notes } = await getUserAccessedNotes(user.uid);
+        setAccessedNotes(notes);
+      }
+      setLoading(false);
+    };
+
+    fetchAccessedNotes();
   }, [user]);
 
   const handleFileChange = (e) => {
@@ -24,13 +38,13 @@ function Profile() {
     }
   };
 
-  if (!user) {
-    return <p className="p-4 text-center">Loading user profile...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
-
-  const accessedResources = user.resourcesAccessed
-    ? data.filter((resource) => user.resourcesAccessed.includes(resource.title))
-    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-100 via-white to-amber-50 py-12 px-6">
@@ -44,7 +58,8 @@ function Profile() {
         </div>
 
         <div className="text-center sm:text-left">
-          <p className="text-2xl font-bold text-white">{user.userName}</p>
+          <p className="text-2xl font-bold text-white">{user?.displayName || userDoc?.displayName}</p>
+          <p className="text-gray-300 text-sm">{user?.email}</p>
           <button
             onClick={() => setIsEditOpen(true)}
             className="mt-3 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow"
@@ -59,15 +74,15 @@ function Profile() {
           <h3 className="mb-6 text-2xl font-semibold text-gray-800">
             Resources Accessed
           </h3>
-          {accessedResources.length > 0 ? (
+          {accessedNotes.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {accessedResources.map((note, index) => (
+              {accessedNotes.map((note, index) => (
                 <ProductCard
                   key={`accessed-${index}`}
                   title={note.title}
-                  subject={note.branch}
-                  numRatings={note.reviews}
-                  price={note.newPrice}
+                  subject={note.subject || note.branch}
+                  numRatings={note.ratings?.length || 0}
+                  price={note.price}
                   btn="Start Reading"
                   isBought={true}
                 />

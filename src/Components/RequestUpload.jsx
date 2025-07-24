@@ -1,16 +1,6 @@
-// RequestUpload.jsx
 import React, { useState, useEffect } from "react"; // Import useEffect
 import { useAuth } from "../contexts/AuthContext"; // adjust path
-
-// Assuming useAuth is correctly imported from your project structure
-// import { useAuth } from "../db/AuthContext"; // Uncomment this for your actual app
-
-// --- MOCK useAuth for demonstration ---
-// In a real application, you would uncomment the line above and ensure
-// your AuthContext is properly defined and exported from "../db/AuthContext".
-// For the purpose of making this component runnable and demonstrating
-// the marksheet scanning functionality, we'll mock the useAuth hook.
-
+import { updateUserDocument } from "../services/authService";
 import MarksheetScanner from "../features/misc/MarksheetScanner"; // Import the scanner component
 
 /**
@@ -20,16 +10,16 @@ import MarksheetScanner from "../features/misc/MarksheetScanner"; // Import the 
  */
 function RequestUpload() {
   // Destructure user and setUser from the useAuth hook
-  const { user, setUser } = useAuth();
+  const { user, userDoc, updateUserDoc } = useAuth();
   // Get the current upload approval status from the user object
-  const uploadApprove = user?.uploadApprove; // No default here, as useAuth already handles it
+  const uploadApprove = userDoc?.uploadApprove;
 
   // State for Request Upload Access form fields, populated by scanner
   const [requestSemester, setRequestSemester] = useState("");
   const [requestSgpa, setRequestSgpa] = useState("");
   // State to store the full scanned academic data
   const [scannedAcademicData, setScannedAcademicData] = useState(
-    user?.academicDetails
+    userDoc?.academicDetails
   );
 
   // Form states for Upload Notes (when uploadApprove === "yes")
@@ -92,12 +82,14 @@ function RequestUpload() {
   const handleEligibilityResult = ({ isEligible, status, data }) => {
     setScannedAcademicData(data); // Store the raw extracted data
 
-    // Update the mock user's uploadApprove status and academic details
-    setUser((prevUser) => ({
-      ...prevUser,
+    // Update the user's uploadApprove status and academic details in Firestore
+    const updateData = {
       uploadApprove: status, // "yes" or "Access Denied"
       academicDetails: data, // Store the detailed academic data for the user
-    }));
+    };
+    
+    updateUserDocument(user.uid, updateData);
+    updateUserDoc(updateData);
 
     // Populate the semester and CGPA fields if data is available from scan
     if (data && data.cgpa && data.semester) {
@@ -155,13 +147,13 @@ function RequestUpload() {
 
     // The status is already set by MarksheetScanner and reflected in user.uploadApprove.
     // This button primarily serves to acknowledge the scan result or re-initiate if needed.
-    if (user.academicDetails) {
+    if (userDoc?.academicDetails) {
       // Only show specific messages if a scan has occurred
-      if (user.uploadApprove === "yes") {
+      if (userDoc?.uploadApprove === "yes") {
         showInfoModal(
           "Your upload access has been granted based on your marksheet scan!"
         );
-      } else if (user.uploadApprove === "Access Denied") {
+      } else if (userDoc?.uploadApprove === "Access Denied") {
         showInfoModal(
           "Your upload access request was denied based on your CGPA. Please re-scan if needed."
         );
@@ -176,7 +168,7 @@ function RequestUpload() {
       semester: requestSemester,
       sgpa: requestSgpa,
       scannedData: scannedAcademicData,
-      currentUploadApproveStatus: user.uploadApprove,
+      currentUploadApproveStatus: userDoc?.uploadApprove,
     });
     // No form reset here, allowing the user to see the scanned data or re-scan immediately.
   };
