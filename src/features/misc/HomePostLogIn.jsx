@@ -42,7 +42,7 @@ function HomePostLogIn() {
     <div className="mt-15 px-6 py-10 min-h-screen text-gray-800 w-[90%] mx-auto">
       <Particles />
       <h1 className="text-4xl font-semibold text-center mb-12">
-        Welcome back, <span className="text-orange-500">{user?.displayName || userDoc?.displayName}</span>{" "}
+        Welcome back, <span className="text-orange-500">{user?.displayName || userDoc?.displayName || "User"}</span>{" "}
         👋
       </h1>
 

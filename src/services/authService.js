@@ -76,7 +76,7 @@ const createUserDocument = async (user, additionalData = {}) => {
     
     try {
       await setDoc(userRef, {
-        displayName: displayName || additionalData.displayName || '',
+        displayName: displayName || additionalData.displayName || email?.split('@')[0] || 'User',
         email,
         photoURL: photoURL || '',
         createdAt,

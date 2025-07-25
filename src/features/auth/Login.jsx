@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import Logo from "../../assets/logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "../../services/authService";
+import { isAdmin } from "../../services/adminService";
 
 function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -12,6 +13,7 @@ function Login() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   
   const { loggedIn } = useAuth();
 
@@ -67,10 +69,12 @@ function Login() {
         <div className="text-center mb-6">
           <img className="w-12 mx-auto mb-2" src={Logo} alt="Logo" />
           <h2 className="text-2xl font-bold text-gray-800">
-            Welcome to CollabeNote
+            {showAdminLogin ? "Admin Login" : "Welcome to CollabeNote"}
           </h2>
           <p className="text-gray-500 text-sm">
-            {isSignUp
+            {showAdminLogin 
+              ? "Sign in with your admin credentials"
+              : isSignUp
               ? "Create your account to get started"
               : "Sign in to continue"}
           </p>
@@ -177,13 +181,62 @@ function Login() {
         </button>
 
         <p className="text-sm text-center mt-6 text-gray-600">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}
-          <span
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-500 font-medium cursor-pointer ml-1 hover:underline"
-          >
-            {isSignUp ? "Login here" : "Sign up here"}
-          </span>
+          {showAdminLogin ? (
+            <>
+              Not an admin?{" "}
+              <span
+                onClick={() => setShowAdminLogin(false)}
+                className="text-blue-500 font-medium cursor-pointer ml-1 hover:underline"
+              >
+                Regular Login
+              </span>
+            </>
+          ) : isSignUp ? (
+            <>
+              Already have an account?
+              <span
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-500 font-medium cursor-pointer ml-1 hover:underline"
+              >
+                Login here
+              </span>
+            </>
+          ) : (
+            <>
+              Don't have an account?
+              <span
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-500 font-medium cursor-pointer ml-1 hover:underline"
+              >
+                Sign up here
+              </span>
+            </>
+          )}
+        </p>
+
+        {!showAdminLogin && (
+          <p className="text-sm text-center mt-2 text-gray-600">
+            Are you an admin?
+            <span
+              onClick={() => setShowAdminLogin(true)}
+              className="text-orange-500 font-medium cursor-pointer ml-1 hover:underline"
+            >
+              Admin Login
+            </span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+              <span
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-500 font-medium cursor-pointer ml-1 hover:underline"
+              >
+                Sign up here
+              </span>
+            </>
+          )}
         </p>
       </div>
     </div>
