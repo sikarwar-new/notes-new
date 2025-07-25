@@ -16,10 +16,18 @@ import {
 import { db } from "../config/firebase";
 
 // Get all notes
-export const getAllNotes = async () => {
+export const getAllNotes = async (includeStatus = 'approved') => {
   try {
     const notesRef = collection(db, 'notes');
-    const q = query(notesRef, orderBy('createdAt', 'desc'));
+    let q = query(notesRef);
+    
+    // Only show approved notes to regular users
+    if (includeStatus) {
+      q = query(q, where('status', '==', includeStatus), orderBy('createdAt', 'desc'));
+    } else {
+      q = query(q, orderBy('createdAt', 'desc'));
+    }
+    
     const querySnapshot = await getDocs(q);
     
     const notes = [];
@@ -35,10 +43,15 @@ export const getAllNotes = async () => {
 };
 
 // Get notes by filters
-export const getNotesByFilter = async (filters = {}) => {
+export const getNotesByFilter = async (filters = {}, includeStatus = 'approved') => {
   try {
     const notesRef = collection(db, 'notes');
     let q = query(notesRef);
+    
+    // Only show approved notes to regular users
+    if (includeStatus) {
+      q = query(q, where('status', '==', includeStatus));
+    }
     
     // Apply filters
     if (filters.year) {
@@ -116,12 +129,13 @@ export const addNoteToUserAccessed = async (userId, noteId) => {
 };
 
 // Create a new note (for sellers)
-export const createNote = async (noteData, userId) => {
+export const createNote = async (noteData, userId, status = 'pending') => {
   try {
     const notesRef = collection(db, 'notes');
     const docRef = await addDoc(notesRef, {
       ...noteData,
       sellerId: userId,
+      status: status,
       createdAt: new Date(),
       updatedAt: new Date(),
       downloads: 0,

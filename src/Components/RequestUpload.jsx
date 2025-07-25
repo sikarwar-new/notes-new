@@ -23,7 +23,7 @@ function RequestUpload() {
   );
 
   // Form states for Upload Notes (when uploadApprove === "yes")
-  const [notesFile, setNotesFile] = useState(null);
+  const [notesDriveLink, setNotesDriveLink] = useState("");
   const [notesBranch, setNotesBranch] = useState("");
   const [notesSemester, setNotesSemester] = useState("");
   const [notesSubject, setNotesSubject] = useState("");
@@ -102,42 +102,6 @@ function RequestUpload() {
   };
 
   /**
-   * Handles the change event for the notes file input.
-   * Validates file type and size.
-   * @param {Event} e - The DOM event from the file input.
-   */
-  const handleNotesFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      const maxSize = 10 * 1024 * 1024; // 10MB
-
-      // Check file type
-      if (!allowedTypes.includes(file.type)) {
-        showInfoModal(
-          "Only PDF or DOC/DOCX files are allowed for notes upload."
-        );
-        setNotesFile(null);
-        return;
-      }
-      // Check file size
-      if (file.size > maxSize) {
-        showInfoModal("File size exceeds 10MB limit.");
-        setNotesFile(null);
-        return;
-      }
-      setNotesFile(file);
-      showInfoModal(`File "${file.name}" selected for upload`);
-    } else {
-      setNotesFile(null);
-    }
-  };
-
-  /**
    * Handles the submission of the Request Upload Access form.
    * This primarily confirms the status determined by the MarksheetScanner.
    * @param {Event} e - The DOM event from the form submission.
@@ -182,19 +146,19 @@ function RequestUpload() {
     e.preventDefault();
     // Validate all notes fields are filled
     if (
-      !notesFile ||
+      !notesDriveLink ||
       !notesBranch ||
       !notesSemester ||
       !notesSubject ||
       !notesGrade
     ) {
       showInfoModal(
-        "Please fill all fields and select a file to upload notes."
+        "Please fill all fields and provide a Google Drive link to upload notes."
       );
       return;
     }
     console.log("Notes Uploaded:", {
-      file: notesFile.name,
+      driveLink: notesDriveLink,
       branch: notesBranch,
       semester: notesSemester,
       subject: notesSubject,
@@ -202,7 +166,7 @@ function RequestUpload() {
     });
     showInfoModal("Notes uploaded successfully!");
     // Reset notes form fields after successful upload
-    setNotesFile(null);
+    setNotesDriveLink("");
     setNotesBranch("");
     setNotesSemester("");
     setNotesSubject("");
@@ -263,24 +227,20 @@ function RequestUpload() {
               <form onSubmit={handleSubmitNotes} className="space-y-4">
                 <div>
                   <label className="block font-medium text-gray-700 mb-1">
-                    Upload File
+                    Google Drive Link
                   </label>
                   <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
+                    type="url"
                     required
-                    onChange={handleNotesFileChange}
-                    className="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-indigo-50 file:text-indigo-700
-                                hover:file:bg-indigo-100"
+                    value={notesDriveLink}
+                    onChange={(e) => setNotesDriveLink(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/..."
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Only <strong className="text-indigo-600">PDF</strong> or{" "}
-                    <strong className="text-indigo-600">DOC/DOCX</strong> files
-                    under 10MB are allowed.
+                    Please upload your notes to Google Drive and make it{" "}
+                    <strong className="text-indigo-600">publicly accessible</strong> or{" "}
+                    <strong className="text-indigo-600">shareable with link</strong>, then paste the link here.
                   </p>
                 </div>
 

@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { logOut } from "../services/authService";
+import { isAdmin } from "../services/adminService";
 
 import Logo from "../assets/logo.png";
 import Cart from "../assets/cart2.png";
@@ -100,6 +101,15 @@ export default function Navbar() {
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-black text-white rounded-md shadow-lg z-50">
+                    {isAdmin(user?.email) && (
+                      <NavLink
+                        to="/admin"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="block px-4 py-2 hover:bg-gray-800 transition text-orange-400"
+                      >
+                        Admin Panel
+                      </NavLink>
+                    )}
                     <NavLink
                       to="/profile"
                       onClick={() => setIsProfileOpen(false)}

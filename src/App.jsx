@@ -17,6 +17,7 @@ import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { CartProvider } from "./contexts/CartContext.jsx";
 import RequestUpload from "./Components/RequestUpload.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
+import AdminPanel from "./features/admin/AdminPanel.jsx";
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 const router = createBrowserRouter([
@@ -45,6 +46,14 @@ const router = createBrowserRouter([
         ),
       },
       { path: "/cart", element: <Cart /> },
+      {
+        path: "/admin",
+        element: (
+          <ProtectedRoute>
+            <AdminPanel />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
